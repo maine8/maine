@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Karaoke</title>
+    <style>
+        body {
+            background-color: #ffc0cb;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        .home-link {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: blue;
+            text-decoration: none;
+        }
+        .home-link:hover {
+            text-decoration: underline;
+        }
+        h1 {
+            margin-top: 50px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        video {
+            width: 90%;
+            max-width: 900px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        #countdown {
+            font-size: 22px;
+            font-weight: bold;
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="home-link">🏠 Home</a>
+    <h1>Enjoy Singing!</h1>
+    <div id="countdown">Your order will arrive in <span id="timer">15:00</span></div>
+
+    <video id="karaokeVideo" playsinline controls>
+        <source src="tibok.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var video = document.getElementById("karaokeVideo");
+
+            // ✅ FORCE AUTOPLAY (UNMUTED)
+            function tryAutoplay() {
+                video.play().catch(() => {
+                    console.log("⚠️ Autoplay blocked, retrying...");
+                    setTimeout(tryAutoplay, 1000); // Subukang i-play ulit kada 1 sec
+                });
+            }
+            tryAutoplay();
+
+            // ✅ REQUEST NOTIFICATION PERMISSION
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission !== "granted") {
+                        alert("⚠️ Enable notifications for better experience!");
+                    }
+                });
+            }
+
+            // ✅ COUNTDOWN TIMER
+            var minutes = 0;
+            var seconds = 25;
+            var countdown = setInterval(updateTimer, 1500);
+
+            function updateTimer() {
+                var timerDisplay = document.getElementById("timer");
+                var minStr = minutes < 10 ? "0" + minutes : minutes;
+                var secStr = seconds < 10 ? "0" + seconds : seconds;
+                timerDisplay.innerHTML = minStr + ":" + secStr;
+
+                if (minutes === 0 && seconds === 10) {
+                    sendNotification("🚴‍♂️ The delivery rider is near your house!");
+                }
+
+                if (minutes === 0 && seconds === 0) {
+                    clearInterval(countdown);
+                    timerDisplay.innerHTML = "00:00"; 
+                    sendNotification("🍔 Your order has arrived!", true);
+                    return;
+                }
+
+                seconds--;
+                if (seconds < 0) {
+                    minutes--;
+                    seconds = 59;
+                }
+            }
+
+            // ✅ FUNCTION TO SEND NOTIFICATIONS + REDIRECT
+            function sendNotification(message, redirect = false) {
+                if ("Notification" in window && Notification.permission === "granted") {
+                    let notif = new Notification(message);
+                    if (redirect) {
+                        notif.onclick = function() {
+                            window.location.href = "order-received.html"; // ✅ REDIRECT AFTER CLICK
+                        };
+                    }
+                } else {
+                    if (redirect) {
+                        if (confirm(message)) { 
+                            window.location.href = "thank-you.html"; // ✅ REDIRECT AFTER OK
+                        }
+                    } else {
+                        alert(message); // 🔹 Fallback alert kung walang notification permission
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
